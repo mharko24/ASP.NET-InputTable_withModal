@@ -1,0 +1,482 @@
+@model GeneralRequirementVM
+@{
+    ViewData["Title"] = "General Requirment";
+    string bgColor = TempData["Error"] != null ? "#fff3cd" : ""; // Set background color if there is an error
+}
+<div class="mb-2 mt-5">
+    <div class="col-8 ">
+        <label id="ContractTitle" class="form-label">@ViewBag.Title</label>
+    </div>
+</div>
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-warning alert-dismissible text-center show" role="alert">
+        <strong>Error!</strong> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+<form id="formId" asp-controller="GeneralRequirement" asp-action="SaveInternal" method="post" enctype="multipart/form-data" autocomplete="off">
+    @Html.AntiForgeryToken()
+    <div class="row">
+        <div class="col-6 ">
+            <div class="col-12 ">
+                <div class="row mt-1">
+                    <div class="col-3 col-sm-4 col-md-3 ">
+                        <label>Project ID:</label>
+                    </div>
+                    <div class="col-9 col-md-8 col-sm-8  align-self-end text-center">
+                        <select id="selectId" class="form-select select-css " asp-for="ProjectId">
+                            @if (Model?.ProjectObjList != null)
+                            {
+                                if (Model.ProjectObjList.Count > 1)
+                                {
+                                    <option value="" selected>Select ID</option>
+                                }
+                                @foreach (var item in Model.ProjectObjList)
+                                {
+                                    <option value="@item.ProjectCode">
+                                        @item.ProjectCode
+                                    </option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="ProjectId" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="row mt-1">
+                    <div class="col-3 col-sm-4 col-md-3 ">
+                        <label>Project Name</label>
+                    </div>
+                    <div class="col-9 col-md-8 col-sm-8  align-self-end text-center">
+                        <select id="selectName" class="form-select select-css" asp-for="ProjectName">
+                            @if (Model?.ProjectObjList != null)
+                            {
+                                if (Model.ProjectObjList.Count > 1)
+                                {
+                                    <option value="" selected>Select Project</option>
+                                }
+                                @foreach (var item in Model.ProjectObjList)
+                                {
+                                    <option value="@item.ProjectCode">
+                                        @item.ProjectName
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class=" col-md-5 col-sm-6">
+            <div class="col-12 ">
+                <div class="row mt-1">
+                    <div class="col-3 col-md-5 col-sm-5 ">
+                        <label>Document No:</label>
+                    </div>
+                    <div class="col-8 col-md-7 col-sm-7 align-self text-center">
+                        <input type="number" class="form-control" asp-for="DocNo" value="@(TempData["DocNo"])"/>
+                        <span asp-validation="DocNo" class="alert-danger"></span>
+                    </div>
+                </div>
+                <div class="row mt-1">
+                    <div class="col-3 col-md-5 col-sm-5 ">
+                        <label>Document Date</label>
+                    </div>
+                    <div class="col-8 col-md-7 col-sm-7 align-self text-center">
+                        <input type="date" asp-for="DocDate" class="form-control" />
+                        <span asp-validation-for="DocDate" class="alert-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <p class="alert-dismissible alert-success">@TempData["DeletePot"]</p>
+    </div>
+    <table id="tblMain" class="table table-responsive table-hover text-center ">
+        <thead>
+            <tr class="table-active">
+                <th width="25%">Item Name</th>
+                <th width="9%">SubProj. </th>
+                <th width="9%">Division</th>
+                <th width="18%">Cost Account</th>
+                <th width="20%">Cost Name</th>
+                <th width="17%">Amount</th>
+                <th class="btn btn-sm btn-dark btn-outline-light" id="btnInsert" title="Insert New">
+                    <img src="~/icons/icons8-add-32.png" />
+                </th>
+
+            </tr>
+        </thead>
+        <tbody id="table_data" class="h6">
+        </tbody>
+
+    </table>
+    <div id="divRemarks" class="form-floating col-12 mt-5">
+        <div class="form-floating mb-3">
+            <textarea name="Remarks" class="form-control" asp-for="Remarks" placeholder="Remarks" required style="height:100px;"></textarea>
+            <label>Remarks</label>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end mt-3">
+        <input id="btnSave" type="submit" class=" btn btn-primary" value="Submit" data-confirm="Are you sure you want to submit this entry?" />
+        <input id="btnReset" type="reset" class=" btn btn-outline-sucess " value="Clear" />
+    </div>
+</form>
+<region>
+    <div class="modal" id="myModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-scrollable modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Asset Codes</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Search Input -->
+                    <div class="col col-4">
+                        <input type="text" id="searchInput" class="form-control mb-3" placeholder="Search">
+                    </div>
+
+                    <!-- Table with Responsive Styles -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-center">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Item Name</th>
+                                    <th scope="col">Item Code</th>
+                                </tr>
+                            </thead>
+                            <tbody class="modal-code modal-responsive ">
+                                @if (Model != null && Model.AssetObjList != null)
+                                {
+                                    foreach (var item in Model.AssetObjList)
+                                    {
+                                        <tr>
+                                            <td>@item.ItemName</td>
+                                            <td>@item.ItemCode</td>
+                                        </tr>
+                                    }  
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td >No Records!</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="myModalSubProject" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Asset Codes</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Search Input -->
+                    <div class="col col-4">
+                        <input type="text" id="searchInputSub" class="form-control mb-3" placeholder="Search">
+                    </div>
+                    <!-- Table with Responsive Styles -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-center">
+                            <thead>
+                                <tr>
+                                    <th scope="col">PRC Code</th>
+                                </tr>
+                            </thead>
+                            <tbody class="modal-sub modal-responsive">
+                                @if (Model != null && Model.SubProjectObjList != null)
+                                {
+                                    @foreach (var item in Model.SubProjectObjList)
+                                    {
+                                        <tr>
+                                            <td>@item.PrcCode</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td>No Records</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="myModalDivision" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Asset Codes</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Search Input -->
+                    <div class="col col-4">
+                        <input type="text" id="searchInputDiv" class="form-control mb-3" placeholder="Search">
+                    </div>
+
+                    <!-- Table with Responsive Styles -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-center">
+                            <thead>
+                                <tr>
+                                    <th scope="col">PRC Code</th>
+                                </tr>
+                            </thead>
+                            <tbody class="modal-div modal-responsive">
+                                @if (Model != null && Model.DivisionObjList != null)
+                                {
+                                    @foreach (var item in Model.DivisionObjList)
+                                    {
+                                        <tr>
+                                            <td>@item.PrcCode</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td>No Records</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-outline-info" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="myModalCost" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="staticBackdropLabel">Asset Codes</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Search Input -->
+                    <div class="col col-4">
+                        <input type="text" id="searchInputCost" class="form-control mb-3" placeholder="Search">
+                    </div>
+
+                    <!-- Table with Responsive Styles -->
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-center">
+                            <thead>
+                                <tr>
+                                    <th scope="col">PRC Code</th>
+                                    <th scope="col">PRC Name</th>
+                                </tr>
+                            </thead>
+                            <tbody class="modal-cost modal-responsive">
+
+                                    @if (Model != null&&Model.CostObjList != null)
+                                    {
+                                        @foreach (var item in Model.CostObjList)
+                                        {
+                                            <tr>
+                                                <td>@item.PrcCode</td>
+                                                <td>@item.PrcName</td>
+                                            </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="2">No Records</td>
+                                    </tr>
+                                }
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</region>@* modal codes template*@
+
+<script src="https://cdn.jsdelivr.net/npm/popper.js@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="~/js/validate.js"></script>
+@*<script src="~/js/internalindex.js"></script>*@
+<script>
+    $(document).ready(function () {
+        var i = 0;
+        var dynamicId;
+        var subId;
+        var divId;
+        var costId;
+        var code;
+        var costItem = [];
+
+        @if(Model!=null && Model.CostObjList!=null)
+    {
+        @foreach(var item in Model.CostObjList)
+        {
+            <text>
+        var obj =  {
+                    itemcode: '@item.PrcCode',
+                    itemname: '@item.PrcName',
+        };
+        costItem.push(obj);
+        </text>
+        }
+    }
+    $('#selectId').on("change", function () {
+            code = $(this).val();
+            $('#selectName').val(code);
+        });
+        $('#selectName').on("change", function () {
+            code = $(this).val();
+            $('#selectId').val(code);
+        });
+
+        $('#btnInsert').click(function () {
+            $("#table_data").append("<tr id='dataInput'>"
+                + "<td><input type='text' name='GeneralList[" + i + "].Item' class='form-control' style='font-size:10px; font-weight:bold' id='txtItemName" + i + "' data-bs-toggle='modal' data-bs-target='#myModal' required/>"
+                + '<span class="text-danger" ></span ></td>'
+                + "<td><input type='text' name='GeneralList[" + i + "].SubProject' class='form-control'  style='font-size:9px; font-weight:bold;' id='txtSubProj" + i + "' data-bs-toggle='modal' data-bs-target='#myModalSubProject'  required />"
+                + "<span class='text-danger'></span ></td>"
+                + "<td><input type='text' name='GeneralList[" + i + "].Division' class='form-control' style='font-size:9px; font-weight:bold' id='txtDiv" + i + "' data-bs-toggle='modal' data-bs-target='#myModalDivision'  required />"
+                + '<span class="text-danger" ></span ></td>'
+                + "<td><input type='text' name='GeneralList[" + i + "].ItemCode' class='form-control' style='font-size:9px; font-weight:bold' id='txtItemCode" + i + "' required />"
+                + "<td><input type='text'  name='GeneralList[" + i + "].CostName' class='form-control' style='font-size:9px; font-weight:bold;'  id='txtcostName" + i + "' data-bs-toggle='modal' data-bs-target='#myModalCost' required />"
+                + '<span class="text-danger" ></span ></td>'
+                + "<td><input type='number' name='GeneralList[" + i + "].Amount' class='form-control' step='0.1' style='font-size:10px;'  required />"
+                + "<span class='text-danger'></span ></td>"
+                + "<td><input type='text' name='GeneralList[" + i + "].CostAcct' class='form-control' style='font-size:10px; font-weight:bold' id='txtcostNo" + i + "' hidden/>"
+                + '<span class="text-danger" ></span ></td>'
+
+                + "</tr>");
+            i++;
+        });
+
+        $("#table_data").on('click', 'input[data-bs-target="#myModal"] ', function () {
+            dynamicId = $(this).attr('id');
+            $('#' + dynamicId).trigger('focus');
+
+        });
+        $("#table_data").on('click', 'input[data-bs-target="#myModalSubProject"] ', function () {
+            subId = $(this).attr('id');
+            $('#' + subId).trigger('focus');
+        });
+        $("#table_data").on('click', 'input[data-bs-target="#myModalDivision"] ', function () {
+            divId = $(this).attr('id');
+            $('#' + divId).trigger('focus');
+        });
+        $("#table_data").on('click', 'input[data-bs-target="#myModalCost"] ', function () {
+            costId = $(this).attr('id');
+            $('#' + costId).trigger('focus');
+        });
+
+        $(".modal-code").on("click", "tr", function () {
+            var itemName = $(this).find("td:first-child").text().trim();
+            var itemCode = $(this).find("td:nth-child(2)").text().trim();
+            var matchingItem = costItem.find(function (item) {
+                return item.itemcode === itemCode;
+            });;
+            var getId = $('input[data-bs-target="#myModalCost"]').attr('id');
+            getId = getId.slice(0, -1);
+            
+            var dynamic = $('#' + dynamicId).attr('id');
+            var y = dynamic.slice(-1);
+            //alert('yyyy'+ y);
+            $('#' + dynamicId).val(itemName);
+            $('#' + dynamicId.replace('txtItemName', 'txtItemCode')).val(itemCode);
+            $('#' + getId + y).val(matchingItem.itemname);
+            console.log(itemCode + " " + itemName);
+            //x++;
+            $('[data-bs-dismiss="modal"]').click();
+        });
+
+        $("#searchInput").on("keyup", function () {
+            let value = $(this).val().toLowerCase();
+            $(".modal-code tr").filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+
+        $('.modal-sub').on("click", "tr", function () {
+            var subcode = $(this).find("td:first-child").text().trim();
+            $(".modal-code tr").removeClass("selected");
+            $('#' + subId).val(subcode);
+            console.log(subcode);
+            $('[data-bs-dismiss="modal"]').click();
+        });
+        $('#searchInputSub').on("keyup", function () {
+            let value = $(this).val().toLowerCase();
+            $(".modal-sub tr").filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+        $('.modal-div').on("click", "tr", function () {
+            var divcode = $(this).find("td:first-child").text().trim();
+            $(".modal-div tr").removeClass("selected");
+            $('#' + divId).val(divcode);
+            console.log(divcode);
+            $('[data-bs-dismiss="modal"]').click();
+        });
+        $('#searchInputDiv').on("keyup", function () {
+            let value = $(this).val().toLowerCase();
+            $(".modal-div tr").filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+        $(".modal-cost").on("click", "tr", function () {
+            var itemCode = $(this).find("td:first-child").text().trim();
+            var itemName = $(this).find("td:nth-child(2)").text().trim();
+            var test = $('#' + costId).attr('id');
+            console.log(test);
+            // Clear previous selections
+            $(".modal-cost tr").removeClass("selected");
+            $('#' + costId).val(itemName);
+            $('#' + costId.replace('txtcostName', 'txtcostNo')).val(itemCode);
+            console.log(itemCode + " " + itemName);
+            $('[data-bs-dismiss="modal"]').click();
+        });
+
+        $("#searchInputCost").on("keyup", function () {
+            let value = $(this).val().toLowerCase();
+            $(".modal-cost tr").filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+
+
+    });
+
+
+
+</script>
+
+
+
+
+
+
+
+
